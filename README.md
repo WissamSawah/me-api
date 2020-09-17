@@ -10,7 +10,7 @@
 Locate to the directory me-api/db and run the following commands:
 
 To enter the sqlite terminal:
-`sqlite3 texts.sql`
+`sqlite3 texts.sqlite`
 
 To create the necessary tables:
 `.read migrate.sql`
