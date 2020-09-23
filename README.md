@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/WissamSawah/me-api.svg?branch=master)](https://travis-ci.org/WissamSawah/me-api)
+
 ## Backend server for the project Me-react
 
 ## Available Scripts
