@@ -1,6 +1,4 @@
-const sqlite3 = require('sqlite3').verbose();
-const db = new sqlite3.Database('./db/texts.sqlite');
-
+const db = require("../db/database.js");
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 // const jwtSecret = process.env.JWT_SECRET;
@@ -55,7 +53,7 @@ const auths = {
 
                     return res.status(201).json({
                         data: {
-                            message: "User successfully registered."
+                            message: "User have successfully registered."
                         }
                     });
                 });
@@ -65,83 +63,82 @@ const auths = {
     login: function(res, body) {
         const email = body.email;
         const password = body.password;
-        const name = body.name;
 
-            if (!email || !password) {
-                return res.status(401).json({
-                    errors: {
-                        status: 401,
-                        source: "/login",
-                        title: "Email or password is missing",
-                        detail: "Email or password is missing"
-                    }
-                });
-            }
+        if (!email || !password) {
+            return res.status(401).json({
+                errors: {
+                    status: 401,
+                    source: "/login",
+                    title: "Email or password is missing",
+                    detail: "Email or password is missing"
+                }
+            });
+        }
 
-            db.get("SELECT * FROM users WHERE email = ?",
-                email,
-                (err, rows) => {
+        db.get("SELECT * FROM users WHERE email = ?",
+            email,
+            (err, rows) => {
+                if (err) {
+                    return res.status(500).json({
+                        errors: {
+                            status: 500,
+                            source: "/login",
+                            title: "Database error",
+                            detail: err.message
+                        }
+                    });
+                }
+
+                if (rows === undefined) {
+                    return res.status(401).json({
+                        errors: {
+                            status: 401,
+                            source: "/login",
+                            title: "User not found",
+                            detail: "User with provided email not found."
+                        }
+                    });
+                }
+
+                const user = rows;
+
+                bcrypt.compare(password, user.password, (err, result) => {
                     if (err) {
                         return res.status(500).json({
                             errors: {
                                 status: 500,
                                 source: "/login",
-                                title: "Database error",
-                                detail: err.message
+                                title: "bcrypt error",
+                                detail: "bcrypt error"
                             }
                         });
                     }
 
-                    if (rows === undefined) {
-                        return res.status(401).json({
-                            errors: {
-                                status: 401,
-                                source: "/login",
-                                title: "User not found",
-                                detail: "User with provided email not found."
+                    if (result) {
+                        let payload = { email: user.email };
+                        let jwtToken = jwt.sign(payload, jwtSecret, { expiresIn: '24h' });
+
+                        return res.json({
+                            data: {
+                                type: "success",
+                                message: "User logged in",
+                                user: payload,
+                                token: jwtToken
                             }
                         });
                     }
 
-                    const user = rows;
-
-                    bcrypt.compare(password, user.password, (err, result) => {
-                        if (err) {
-                            return res.status(500).json({
-                                errors: {
-                                    status: 500,
-                                    source: "/login",
-                                    title: "bcrypt error",
-                                    detail: "bcrypt error"
-                                }
-                            });
+                    return res.status(401).json({
+                        errors: {
+                            status: 401,
+                            source: "/login",
+                            title: "Wrong password",
+                            detail: "Password is incorrect."
                         }
-
-                        if (result) {
-                            let payload = { email: user.email };
-                            let jwtToken = jwt.sign(payload, jwtSecret, { expiresIn: '24h' });
-
-                            return res.json({
-                                data: {
-                                    type: "success",
-                                    message: "User logged in",
-                                    user: payload,
-                                    token: jwtToken
-                                }
-                            });
-                        }
-
-                        return res.status(401).json({
-                            errors: {
-                                status: 401,
-                                source: "/login",
-                                title: "Wrong password",
-                                detail: "Password is incorrect."
-                            }
-                        });
                     });
                 });
-        }
+            });
+    }
 };
 
 module.exports = auths;

@@ -19,6 +19,7 @@ if (process.env.NODE_ENV !== 'test') {
 }
 
 const bodyParser = require("body-parser");
+
 app.use(bodyParser.json()); // for parsing application/json
 app.use(bodyParser.urlencoded({ extended: true }));
 
@@ -38,6 +39,7 @@ app.use('/auth', auths);
 
 app.use((req, res, next) => {
     var err = new Error("Not Found");
+
     err.status = 404;
     err.message = "Not found page";
 
@@ -60,4 +62,6 @@ app.use((err, req, res, next) => {
     });
 });
 
-app.listen(port, () => console.log(`Example API listening on port ${port}!`));
+const server = app.listen(port, () => console.log(`Example app listening on port ${port}!`));
+
+module.exports = server;
